@@ -46,13 +46,17 @@ namespace Household_Budgeter.Controllers
             return Ok(formdata);
         }
 
-        public IHttpActionResult Put(int? id)
+        public IHttpActionResult Put(int? id, HouseholdsViewModel formdata)
         {
             var allhouseholds = DbContext.HouseholdManagement.FirstOrDefault(p => p.Id == id);
-            var model = new HouseholdsViewModel();
-            model.Name = allhouseholds.Name;
-            model.Description = allhouseholds.Description;              
-            return Ok(model);
+            if (allhouseholds == null)
+            {
+                return NotFound();
+            }
+            allhouseholds.Name = formdata.Name;
+            allhouseholds.Description = formdata.Description;
+            DbContext.SaveChanges();
+            return Ok(allhouseholds);
         }       
     }
 }
