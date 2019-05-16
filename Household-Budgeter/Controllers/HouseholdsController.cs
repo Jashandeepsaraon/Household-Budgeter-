@@ -1,5 +1,6 @@
 ﻿using Household_Budgeter.Models;
 using Household_Budgeter.Models.Domain;
+using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace Household_Budgeter.Controllers
 
         public IHttpActionResult Get(int? id)
         {
-            var allhouseholds = DbContext.HouseholdManagement.FirstOrDefault(user => user.Id == id);
+            var allhouseholds = DbContext.Allhouseholds.FirstOrDefault(user => user.Id == id);
             if (allhouseholds == null)
             {
                 return NotFound();
@@ -29,34 +30,88 @@ namespace Household_Budgeter.Controllers
 
         public IHttpActionResult Get()
         {
-            return Ok(DbContext.HouseholdManagement);
+            var model = DbContext
+               .Allhouseholds
+               .Select(p => new HouseholdsViewModel
+               {
+                   Name = p.Name,
+                   Id = p.Id,
+                   Description = p.Description,
+                   DateCreated = p.DateCreated,
+                   DateUpdated = p.DateUpdated,
+                   Owner = p.Owner.Email
+               }).ToList();
+            return Ok(model);
         }
 
-        public IHttpActionResult Post(HouseholdsViewModel formdata)
+
+        public IHttpActionResult Post(HouseholdsBindingModel formdata)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            
             Households households = new Households();
+            var userName = User.Identity.Name;
+            households.Owner = DbContext.Users.FirstOrDefault(p => p.UserName == userName);
             households.Name = formdata.Name;
             households.Description = formdata.Description;
-            DbContext.HouseholdManagement.Add(households);
+            DbContext.Allhouseholds.Add(households);
             DbContext.SaveChanges();
-            return Ok(formdata);
+
+            var model = new HouseholdsViewModel();
+            model.Id = households.Id;
+            model.Name = households.Name;
+            model.Description = households.Description;
+            model.Owner = households.Owner.Email;
+            return Ok(model);
         }
 
-        public IHttpActionResult Put(int? id, HouseholdsViewModel formdata)
+        public IHttpActionResult Put(int? id, HouseholdsBindingModel formdata)
         {
-            var allhouseholds = DbContext.HouseholdManagement.FirstOrDefault(p => p.Id == id);
-            if (allhouseholds == null)
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (user != null || household.OwnerId == userId)
+            {             
+                if (household == null || household.OwnerId == userId)
+                {
+                    return NotFound();
+                }
+                household.Name = formdata.Name;
+                household.Description = formdata.Description;
+                household.DateUpdated = DateTime.Now;
+                DbContext.SaveChanges();
+                return Ok(household);
+            }
+            else
+            {
+                return BadRequest("You are not the owner of this Household.");
+            }
+        }
+
+        public IHttpActionResult Delete(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var allhousehold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (user != null || allhousehold.OwnerId == userId)
+            {      
+                if (allhousehold != null || allhousehold.OwnerId == userId)
+                {
+                    DbContext.Allhouseholds.Remove(allhousehold);
+                    DbContext.SaveChanges();
+                }
+                return Ok();
+            }
+            else
             {
                 return NotFound();
             }
-            allhouseholds.Name = formdata.Name;
-            allhouseholds.Description = formdata.Description;
-            DbContext.SaveChanges();
-            return Ok(allhouseholds);
-        }       
+        }
+
     }
 }
+
+
