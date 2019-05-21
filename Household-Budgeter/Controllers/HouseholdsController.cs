@@ -162,21 +162,21 @@ namespace Household_Budgeter.Controllers
             return Ok();
         }
 
-        //[Route("api/Households/DisplayUsers/{id}")]
-        //public IHttpActionResult DisplayUsers(int? id)
-        //{
-        //    var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
-        //    var userId = User.Identity.GetUserId();
-        //    var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
-        //    var userList = DbContext.Allhouseholds
-        //                     .Where(p => p.Id == id)
-        //                     .Select(p => new DisplayUsersViewModel
-        //                     {
-        //                         Id = p.Id,
-        //                         //Users = p.Users.Select(p => p.Email == );
-        //                     }).ToList();
-        //    return Ok(userList);
-        //}
+        [Route("api/Households/DisplayUsers/{id}")]
+        public IHttpActionResult DisplayUsers(int? id)
+        {
+            var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var userList = DbContext.Allhouseholds
+                             .Where(p => p.Id == id)
+                             .Select(p => new DisplayUsersViewModel
+                             {
+                                 Id = p.Id,
+                                 Users = p.Users.Select(m => m.Email).ToList()
+                             });
+            return Ok(userList);
+        }
     }
 }
 
