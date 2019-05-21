@@ -7,7 +7,7 @@ namespace Household_Budgeter.Models.Domain
 {
     public class Households
     {
-        public int Id { get; set; } 
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime DateCreated { get; set; }
@@ -15,6 +15,8 @@ namespace Household_Budgeter.Models.Domain
         public virtual List<ApplicationUser> Users { get; set; }
         public virtual ApplicationUser Owner { get; set; }
         public string OwnerId { get; set; }
+        public virtual List<ApplicationUser> InviteUsers { get; set; }
+        public virtual List<Categories> Categories { get; set; }
         public Households()
         {
             DateCreated = DateTime.Now;

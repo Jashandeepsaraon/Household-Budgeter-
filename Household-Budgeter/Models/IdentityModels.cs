@@ -17,11 +17,14 @@ namespace Household_Budgeter.Models
         public virtual List<Households> OwnerHouseHold { get; set; }
         [InverseProperty(nameof(Households.Users))]
         public virtual List<Households> ParticipateHouseHold { get; set; }
-        
+        [InverseProperty(nameof(Households.InviteUsers))]
+        public virtual List<Households> InviteUsers { get; set; }
+
         public ApplicationUser()
         {
             OwnerHouseHold = new List<Households>();
             ParticipateHouseHold = new List<Households>();
+            InviteUsers = new List<Households>();
         }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager, string authenticationType)
@@ -41,6 +44,7 @@ namespace Household_Budgeter.Models
         }
 
         public DbSet<Households> Allhouseholds { get; set; }
+        public DbSet<Categories> Categories { get; set; }
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();

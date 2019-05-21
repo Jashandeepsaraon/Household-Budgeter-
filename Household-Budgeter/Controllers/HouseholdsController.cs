@@ -20,12 +20,20 @@ namespace Household_Budgeter.Controllers
 
         public IHttpActionResult Get(int? id)
         {
-            var allhouseholds = DbContext.Allhouseholds.FirstOrDefault(user => user.Id == id);
-            if (allhouseholds == null)
+            var households = DbContext.Allhouseholds.FirstOrDefault(user => user.Id == id);
+            if (households == null)
             {
                 return NotFound();
             }
-            return Ok(allhouseholds);
+            return Ok(new HouseholdsViewModel
+            {
+                Name = households.Name,
+                Id = households.Id,
+                Description = households.Description,
+                DateCreated = households.DateCreated,
+                DateUpdated = households.DateUpdated,
+                Owner = households.Owner.Email,
+            });
         }
 
         public IHttpActionResult Get()
@@ -51,7 +59,7 @@ namespace Household_Budgeter.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
+
             Households households = new Households();
             var userName = User.Identity.Name;
             households.Owner = DbContext.Users.FirstOrDefault(p => p.UserName == userName);
@@ -73,9 +81,9 @@ namespace Household_Budgeter.Controllers
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
-            if (user != null || household.OwnerId == userId)
-            {             
-                if (household == null || household.OwnerId == userId)
+            if (user != null && household.OwnerId == userId)
+            {
+                if (household == null)
                 {
                     return NotFound();
                 }
@@ -83,7 +91,7 @@ namespace Household_Budgeter.Controllers
                 household.Description = formdata.Description;
                 household.DateUpdated = DateTime.Now;
                 DbContext.SaveChanges();
-                return Ok(household);
+                return Ok();
             }
             else
             {
@@ -91,26 +99,84 @@ namespace Household_Budgeter.Controllers
             }
         }
 
-        public IHttpActionResult Delete(int id)
+        public IHttpActionResult Delete(int? id)
         {
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var allhousehold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
-            if (user != null || allhousehold.OwnerId == userId)
-            {      
-                if (allhousehold != null || allhousehold.OwnerId == userId)
+            if (user != null)
+            {
+                if (allhousehold != null && allhousehold.OwnerId == userId)
                 {
                     DbContext.Allhouseholds.Remove(allhousehold);
                     DbContext.SaveChanges();
                 }
-                return Ok();
+                else if (user.ParticipateHouseHold.Any(p => p.Id == allhousehold.Id))
+                {
+                    allhousehold.Users.Remove(user);
+                    DbContext.SaveChanges();
+                }
             }
             else
             {
-                return NotFound();
+                return BadRequest("You have not Permission to delete this Household.");
             }
+            return Ok();
         }
 
+        [Route("api/Households/InviteUsers/{id}")]
+        [HttpPost]
+        public IHttpActionResult InviteUsers(int? id, string email)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var userEmail = DbContext.Users.FirstOrDefault(p => p.Email == email);
+            var selectedHouse = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (user != null && selectedHouse.OwnerId == userId)
+            {
+                if (!selectedHouse.InviteUsers.Contains(userEmail))
+                {
+                    selectedHouse.InviteUsers.Add(userEmail);
+                    if (userEmail != null)
+                    {
+                        Invitation.Send(userEmail.Email, $"You are invite to {selectedHouse.Name}. Would you like to Accept invitation?", "Inviation For Household.");
+                    }
+                }
+                DbContext.SaveChanges();
+            }
+            return Ok();
+        }
+
+        [Route("api/Households/JoinHousehold/{id}")]
+        [HttpPost]
+        public IHttpActionResult JoinHousehold(int? id, string userId)
+        {
+            var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            if (!house.Users.Contains(user))
+            {
+                house.Users.Add(user);
+                house.InviteUsers.Remove(user);
+            }
+            DbContext.SaveChanges();
+            return Ok();
+        }
+
+        //[Route("api/Households/DisplayUsers/{id}")]
+        //public IHttpActionResult DisplayUsers(int? id)
+        //{
+        //    var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+        //    var userId = User.Identity.GetUserId();
+        //    var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+        //    var userList = DbContext.Allhouseholds
+        //                     .Where(p => p.Id == id)
+        //                     .Select(p => new DisplayUsersViewModel
+        //                     {
+        //                         Id = p.Id,
+        //                         //Users = p.Users.Select(p => p.Email == );
+        //                     }).ToList();
+        //    return Ok(userList);
+        //}
     }
 }
 
