@@ -106,7 +106,11 @@ namespace Household_Budgeter.Controllers
             var allhousehold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             if (user != null)
             {
-                if (allhousehold != null && allhousehold.OwnerId == userId)
+                if (allhousehold == null)
+                {
+                    return NotFound();
+                }
+                else if (allhousehold != null && allhousehold.OwnerId == userId)
                 {
                     DbContext.Allhouseholds.Remove(allhousehold);
                     DbContext.SaveChanges();

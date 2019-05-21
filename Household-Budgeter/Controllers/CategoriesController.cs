@@ -131,5 +131,22 @@ namespace Household_Budgeter.Controllers
             return Ok();
         }
 
+        //[Route("api/Categories/DisplayUsers/{id}")]
+        //public IHttpActionResult DisplayUsers(int? id)
+        //{
+        //    var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+        //    var userId = User.Identity.GetUserId();
+        //    var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+        //    var userList = DbContext.Categories
+        //                     .Where(p => p.Id == id)
+        //                     .Select(p => new DisplayUsersViewModel
+        //                     {
+        //                         Id = p.Id,
+        //                         Users = p.Households.Users.Select(m => m.Email).ToList(),
+        //                         Categories = p.Households.Categories.Select(m => m.Name)
+        //                     });
+        //    return Ok(userList);
+        //}
+
     }
 }
