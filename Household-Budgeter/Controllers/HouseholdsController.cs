@@ -33,6 +33,7 @@ namespace Household_Budgeter.Controllers
                 DateCreated = households.DateCreated,
                 DateUpdated = households.DateUpdated,
                 Owner = households.Owner.Email,
+                
             });
         }
 
@@ -47,7 +48,15 @@ namespace Household_Budgeter.Controllers
                    Description = p.Description,
                    DateCreated = p.DateCreated,
                    DateUpdated = p.DateUpdated,
-                   Owner = p.Owner.Email
+                   Owner = p.Owner.Email,
+                   //Categories = p.Categories.Select(m => new CategoriesViewModel
+                   //{
+                   //    Name = m.Name,
+                   //    Description = m.Description,
+                   //    DateCreated = m.DateCreated,
+                   //    DateUpdated = m.DateUpdated,
+                   //    Id = m.Id,
+                   //}).ToList()
                }).ToList();
             return Ok(model);
         }
@@ -153,9 +162,10 @@ namespace Household_Budgeter.Controllers
 
         [Route("api/Households/JoinHousehold/{id}")]
         [HttpPost]
-        public IHttpActionResult JoinHousehold(int? id, string userId)
+        public IHttpActionResult JoinHousehold(int? id)
         {
             var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             if (!house.Users.Contains(user))
             {

@@ -61,6 +61,10 @@ namespace Household_Budgeter.Controllers
                 return BadRequest(ModelState);
             }
             var houseHold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (houseHold == null)
+            {
+                return BadRequest("There is no household.");
+            }
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             if (user != null && houseHold.OwnerId == userId)
@@ -91,6 +95,10 @@ namespace Household_Budgeter.Controllers
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (household == null)
+            {
+                return BadRequest("There is no household.");
+            }
             var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
             if (user != null && categories.Households.OwnerId == userId && categories != null)
             {
@@ -131,22 +139,31 @@ namespace Household_Budgeter.Controllers
             return Ok();
         }
 
-        //[Route("api/Categories/DisplayUsers/{id}")]
-        //public IHttpActionResult DisplayUsers(int? id)
-        //{
-        //    var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
-        //    var userId = User.Identity.GetUserId();
-        //    var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
-        //    var userList = DbContext.Categories
-        //                     .Where(p => p.Id == id)
-        //                     .Select(p => new DisplayUsersViewModel
-        //                     {
-        //                         Id = p.Id,
-        //                         Users = p.Households.Users.Select(m => m.Email).ToList(),
-        //                         Categories = p.Households.Categories.Select(m => m.Name)
-        //                     });
-        //    return Ok(userList);
-        //}
+        [Route("api/Categories/DisplayUsers/{id}")]
+        [HttpGet]
+        public IHttpActionResult DisplayUsers(int id)
+        {
+            var userId = User.Identity.GetUserId();
 
+            var categories = DbContext.Categories.Where(p => p.HouseholdsId == id &&
+                (p.Households.OwnerId == userId
+                || p.Households.Users.Any(t => t.Id == userId)))
+                .Select(m => new CategoriesViewModel
+                {
+                    Name = m.Name,
+                    Description = m.Description,
+                    HouseholdName = m.HouseholdName,
+                    DateCreated = m.DateCreated,
+                    DateUpdated = m.DateUpdated
+                })
+                .ToList();
+
+            if (categories == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(categories);
+        }
     }
 }

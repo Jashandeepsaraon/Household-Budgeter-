@@ -1,20 +1,19 @@
-﻿using Household_Budgeter.Models.Domain;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
 namespace Household_Budgeter.Models
 {
-    public class HouseholdsViewModel
+    public class BankAccountViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime DateCreated { get; set; }
-        public DateTime? DateUpdated { get; set; }       
+        public DateTime? DateUpdated { get; set; }
+        public decimal Balance { get; set; }
         public string Owner { get; set; }
         public string OwnerId { get; set; }
-        public virtual List<Categories> Categories { get; set; }
     }
 }

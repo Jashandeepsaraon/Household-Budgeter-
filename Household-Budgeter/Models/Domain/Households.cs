@@ -17,6 +17,11 @@ namespace Household_Budgeter.Models.Domain
         public string OwnerId { get; set; }
         public virtual List<ApplicationUser> InviteUsers { get; set; }
         public virtual List<Categories> Categories { get; set; }
+        public int CategoriesId { get; set; }
+        public virtual List<BankAccount> BankAccounts { get; set; }
+        public int BankAccountsId { get; set; }
+
+
         public Households()
         {
             DateCreated = DateTime.Now;
