@@ -14,7 +14,8 @@ namespace Household_Budgeter.Models.Domain
         public DateTime DateCreated { get; set; }
         public DateTime Date { get; set; }
         public DateTime? DateUpdated { get; set; }
-        public string Owner { get; set; }
+        public string OwnerEmail { get; set; }
         public string OwnerId { get; set; }
+
     }
 }

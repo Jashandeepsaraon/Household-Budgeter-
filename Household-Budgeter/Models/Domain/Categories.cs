@@ -15,8 +15,7 @@ namespace Household_Budgeter.Models.Domain
         public DateTime? DateUpdated { get; set; }
         public int HouseholdsId { get; set; }
         public virtual Households Households { get; set; }
-        public virtual List<Transaction> Transactions { get; set; }
-        public int TransactionsId { get; set; }  
+        public virtual List<Transaction> Transactions { get; set; } 
 
         public Categories()
         {

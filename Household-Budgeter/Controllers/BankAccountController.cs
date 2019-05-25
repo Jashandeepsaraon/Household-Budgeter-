@@ -112,6 +112,36 @@ namespace Household_Budgeter.Controllers
             }
         }
 
+        public IHttpActionResult Recalculating(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
+            if (user != null && account != null && account.Households.OwnerId == userId)
+            {
+                decimal result = 0;
+                foreach (var t in account.Transactions)
+                {
+                    if (!t.Void)
+                    {
+                        result += t.Amount;
+                    }
+                }
+                //result = account.Transactions.Sum(t => t.Void ? 0 : t.Amount);
+                account.Balance = result;
+                return Ok("Total Amount");
+            }
+            else
+            {
+                if (account == null)
+                {
+                    return NotFound();
+                }
+                return Unauthorized();
+            }
+        }
+
         [Route("api/BankAccount/DisplayAccounts/{id}")]
         [HttpGet]
         public IHttpActionResult DisplayAccounts(int id)
@@ -119,8 +149,8 @@ namespace Household_Budgeter.Controllers
             var userId = User.Identity.GetUserId();
 
             var account = DbContext.BankAccounts.Where(p => p.HouseholdsId == id &&
-                (p.Households.OwnerId == userId))
-                //|| p.Households.Users.Any(t => t.Id == userId)))
+                (p.Households.OwnerId == userId
+                || p.Households.Users.Any(t => t.Id == userId)))
                 .Select(m => new BankAccountViewModel
                 {
                     Name = m.Name,

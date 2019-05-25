@@ -20,11 +20,14 @@ namespace Household_Budgeter.Models
         [InverseProperty(nameof(Households.InviteUsers))]
         public virtual List<Households> InviteUsers { get; set; }
 
+        public virtual List<Transaction> CreateTransactions { get; set; }
+
         public ApplicationUser()
         {
             OwnerHouseHold = new List<Households>();
             ParticipateHouseHold = new List<Households>();
             InviteUsers = new List<Households>();
+            CreateTransactions = new List<Transaction>();
         }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager, string authenticationType)

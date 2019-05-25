@@ -21,6 +21,9 @@ namespace Household_Budgeter.Models.Domain
         public int BankAccountId { get; set; }
         public virtual BankAccount BankAccount { get; set; }
 
+        public string CreatedById { get; set; }
+        public virtual ApplicationUser CreatedBy { get; set; }
+
         public Transaction()
         {
             DateCreated = DateTime.Now;

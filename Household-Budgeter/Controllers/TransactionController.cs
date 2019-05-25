@@ -34,7 +34,7 @@ namespace Household_Budgeter.Controllers
                 DateUpdated = transaction.DateUpdated,
                 Amount = transaction.Amount,
                 Date = transaction.Date,
-                Owner = transaction.BankAccount.Households.Owner.Email
+                OwnerEmail = transaction.CreatedBy.Email
             });
         }
 
@@ -51,7 +51,7 @@ namespace Household_Budgeter.Controllers
                    DateUpdated = p.DateUpdated,
                    Amount = p.Amount,
                    Date = p.Date,
-                   Owner = p.BankAccount.Households.Owner.Email
+                   OwnerEmail = p.CreatedBy.Email
                }).ToList();
             return Ok(model);
         }
@@ -71,24 +71,35 @@ namespace Household_Budgeter.Controllers
             }
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
-            if (user != null && houseHold.OwnerId == userId)
+            if (user != null && houseHold.OwnerId == userId ||categories.Households.Users.Contains(user))
             {
                 Transaction transaction = new Transaction();
                 var userName = User.Identity.Name;
                 transaction.Title = formdata.Title;
                 transaction.Description = formdata.Description;
-                account.Balance += formdata.Amount;
-                //transaction.Date
+                transaction.Amount = formdata.Amount;
+                account.Balance += transaction.Amount;
+                transaction.Date = formdata.Date;
+                transaction.BankAccountId = account.Id;
+                transaction.CategoriesId = categories.Id;
+                transaction.CreatedById = userId;
                 DbContext.Transactions.Add(transaction);
+               
                 //DbContext.Transactions.Add(categories);
                 DbContext.SaveChanges();
 
-                var model = new TransactionViewModel();
-                model.Id = transaction.Id;
-                model.Title = transaction.Title;
-                model.Description = transaction.Description;
-                model.Amount = transaction.Amount;
-                model.Owner = transaction.Categories.Households.Owner.Email;
+                var model = new TransactionViewModel
+                {
+                    Id = transaction.Id,
+                    Title = transaction.Title,
+                    Description = transaction.Description,
+                    Amount = transaction.Amount,
+                    OwnerEmail = transaction.Categories.Households.Owner.Email,
+                    Date = transaction.Date,
+                    OwnerId = transaction.CreatedById,
+                    DateCreated = transaction.DateCreated,
+                    DateUpdated = transaction.DateUpdated
+                };
                 return Ok(model);
             }
             else
@@ -104,12 +115,14 @@ namespace Household_Budgeter.Controllers
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
-            if (user != null && transaction.Categories.Households.OwnerId == userId && transaction != null)
+            
+            if (user != null && transaction !=null && transaction.Categories.Households.OwnerId == userId  || transaction.CreatedById == userId)
             {
                 transaction.Title = formdata.Title;
                 transaction.Description = formdata.Description;
                 transaction.Amount = formdata.Amount;
                 transaction.DateUpdated = DateTime.Now;
+                transaction.Date = formdata.Date;
                 DbContext.SaveChanges();
                 return Ok();
             }
@@ -118,7 +131,7 @@ namespace Household_Budgeter.Controllers
                 return BadRequest("You are not the owner of this HouseHold Transaction.");
             }
         }
-
+        [Route("api/Transaction/VoidTransaction/{id}")]
         public IHttpActionResult VoidTransaction(int? id)
         {
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
@@ -126,6 +139,7 @@ namespace Household_Budgeter.Controllers
             if (transaction != null && transaction.Categories.Households.OwnerId == userId)
             {
                 transaction.Void = true;
+                transaction.BankAccount.Balance -= transaction.Amount;
                 DbContext.SaveChanges();
             }
             else
