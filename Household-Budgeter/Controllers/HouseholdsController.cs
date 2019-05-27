@@ -154,6 +154,15 @@ namespace Household_Budgeter.Controllers
                     {
                         Invitation.Send(userEmail.Email, $"You are invite to {selectedHouse.Name}. Would you like to Accept invitation?", "Inviation For Household.");
                     }
+                    else
+                    {
+                        return BadRequest("There is no member exist to invite in this Household");
+                    }
+                    if (userEmail.Id == userId)
+                    {
+                        ModelState.AddModelError("", "You cannot invite yourself to your own household");
+                        return BadRequest(ModelState);
+                    }
                 }
                 DbContext.SaveChanges();
             }
@@ -167,6 +176,11 @@ namespace Household_Budgeter.Controllers
             var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            if (!house.InviteUsers.Any(p => p.Id == userId))
+            {
+                ModelState.AddModelError("", "You are not invited to this household");
+                return BadRequest(ModelState);
+            }
             if (!house.Users.Contains(user))
             {
                 house.Users.Add(user);
@@ -176,6 +190,7 @@ namespace Household_Budgeter.Controllers
             {
                 return BadRequest("You are the owner of this household.");
             }
+           
             DbContext.SaveChanges();
             return Ok();
         }
