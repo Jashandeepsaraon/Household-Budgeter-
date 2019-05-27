@@ -10,6 +10,7 @@ using System.Web.Http;
 
 namespace Household_Budgeter.Controllers
 {
+    [Authorize]
     public class TransactionController : ApiController
     {
         private ApplicationDbContext DbContext;
@@ -65,13 +66,13 @@ namespace Household_Budgeter.Controllers
             var houseHold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == formdata.HouseholdsId);
             var categories = DbContext.Categories.FirstOrDefault(p => p.Id == formdata.CategoriesId);
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == formdata.AccountId);
-            if (houseHold == null)
+            if (houseHold == null && categories == null)
             {
-                return BadRequest("There is no household.");
+                return BadRequest("Either the Household or Category is not found.");
             }
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
-            if (user != null && houseHold.OwnerId == userId ||categories.Households.Users.Contains(user))
+            if (user != null && account != null && houseHold.OwnerId == userId || categories.Households.Users.Contains(user))
             {
                 Transaction transaction = new Transaction();
                 var userName = User.Identity.Name;
@@ -83,8 +84,7 @@ namespace Household_Budgeter.Controllers
                 transaction.BankAccountId = account.Id;
                 transaction.CategoriesId = categories.Id;
                 transaction.CreatedById = userId;
-                DbContext.Transactions.Add(transaction);
-               
+                DbContext.Transactions.Add(transaction);              
                 //DbContext.Transactions.Add(categories);
                 DbContext.SaveChanges();
 
@@ -104,7 +104,7 @@ namespace Household_Budgeter.Controllers
             }
             else
             {
-                return BadRequest("You are not the owner of this HouseHold.");
+                return BadRequest("You are not the owner or member of this HouseHold.");
             }
         }
 
@@ -115,8 +115,13 @@ namespace Household_Budgeter.Controllers
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
-            
-            if (user != null && transaction !=null && transaction.Categories.Households.OwnerId == userId  || transaction.CreatedById == userId)
+
+            if (household == null && account == null)
+            {
+                return BadRequest("Either the Household or Account is not found.");
+            }
+
+            if (user != null && transaction != null && transaction.Categories.Households.OwnerId == userId  || transaction.CreatedById == userId)
             {
                 transaction.Title = formdata.Title;
                 transaction.Description = formdata.Description;
@@ -128,15 +133,48 @@ namespace Household_Budgeter.Controllers
             }
             else
             {
-                return BadRequest("You are not the owner of this HouseHold Transaction.");
+                return BadRequest("You are not the owner or member of this HouseHold Transaction.");
             }
         }
+
+        public IHttpActionResult Delete(int? id)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var allhousehold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
+            var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
+            var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
+            if (allhousehold == null && account == null)
+            {
+                return BadRequest("Either the Household or Account is not found.");
+            }
+            if (user != null)
+            {
+                if (transaction != null && transaction.Categories.Households.OwnerId == userId || transaction.CreatedById == userId)
+                {
+                    DbContext.Transactions.Remove(transaction);
+                    transaction.BankAccount.Balance -= transaction.Amount;
+                    DbContext.SaveChanges();
+                }
+                else
+                {
+                    return BadRequest("You have not Permission to delete this Transation.");
+                }
+            }
+            else
+            {
+                return BadRequest("The Owner or member should have to be login to delete the transation.");
+            }
+            return Ok();
+        }
+
         [Route("api/Transaction/VoidTransaction/{id}")]
         public IHttpActionResult VoidTransaction(int? id)
         {
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
             var userId = User.Identity.GetUserId();
-            if (transaction != null && transaction.Categories.Households.OwnerId == userId)
+            if (transaction != null && transaction.Categories.Households.OwnerId == userId || transaction.CreatedById == userId)
             {
                 transaction.Void = true;
                 transaction.BankAccount.Balance -= transaction.Amount;
@@ -147,6 +185,36 @@ namespace Household_Budgeter.Controllers
                 return BadRequest("You have no any transaction for Voiding.");
             }
             return Ok("You Void the transaction.");
+        }
+
+        [Route("api/Transaction/DisplayTransaction/{id}")]
+        [HttpGet]
+        public IHttpActionResult DisplayTransaction(int id)
+        {
+            var userId = User.Identity.GetUserId();
+
+            var transaction = DbContext.Transactions.Where(p => p.BankAccountId == id &&
+                (p.BankAccount.Households.OwnerId == userId
+                || p.BankAccount.Households.Users.Any(t => t.Id == userId)))
+                .Select(m => new TransactionViewModel
+                {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Amount = m.Amount,
+                    Description = m.Description,
+                    DateCreated = m.DateCreated,
+                    DateUpdated = m.DateUpdated,
+                    Date = m.Date,
+                    OwnerEmail = m.CreatedBy.Email,
+                    OwnerId = m.CreatedById
+                }).ToList();
+
+            if (transaction == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(transaction);
         }
 
     }

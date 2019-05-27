@@ -10,8 +10,9 @@ using System.Web.Http;
 
 namespace Household_Budgeter.Controllers
 {
+    [Authorize]
     public class CategoriesController : ApiController
-    {
+    {      
         private ApplicationDbContext DbContext;
         public CategoriesController()
         {
@@ -149,14 +150,16 @@ namespace Household_Budgeter.Controllers
                 (p.Households.OwnerId == userId
                 || p.Households.Users.Any(t => t.Id == userId)))
                 .Select(m => new CategoriesViewModel
-                {
-                    Name = m.Name,
+                {                   
+                    Name = m.Name,                   
                     Description = m.Description,
                     HouseholdName = m.HouseholdName,
                     DateCreated = m.DateCreated,
-                    DateUpdated = m.DateUpdated
-                })
-                .ToList();
+                    DateUpdated = m.DateUpdated,
+                    Owner = m.Households.Owner.Email,
+                    Id = m.Id,
+                    OwnerId = m.Households.OwnerId
+                }).ToList();
 
             if (categories == null)
             {

@@ -10,8 +10,9 @@ using System.Web.Http;
 
 namespace Household_Budgeter.Controllers
 {
+    [Authorize]
     public class HouseholdsController : ApiController
-    {
+    {       
         private ApplicationDbContext DbContext;
         public HouseholdsController()
         {
@@ -33,7 +34,7 @@ namespace Household_Budgeter.Controllers
                 DateCreated = households.DateCreated,
                 DateUpdated = households.DateUpdated,
                 Owner = households.Owner.Email,
-                
+
             });
         }
 
@@ -60,7 +61,6 @@ namespace Household_Budgeter.Controllers
                }).ToList();
             return Ok(model);
         }
-
 
         public IHttpActionResult Post(HouseholdsBindingModel formdata)
         {
@@ -172,11 +172,16 @@ namespace Household_Budgeter.Controllers
                 house.Users.Add(user);
                 house.InviteUsers.Remove(user);
             }
+            else
+            {
+                return BadRequest("You are the owner of this household.");
+            }
             DbContext.SaveChanges();
             return Ok();
         }
 
         [Route("api/Households/DisplayUsers/{id}")]
+        [HttpGet]
         public IHttpActionResult DisplayUsers(int? id)
         {
             var house = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
@@ -185,9 +190,9 @@ namespace Household_Budgeter.Controllers
             var userList = DbContext.Allhouseholds
                              .Where(p => p.Id == id)
                              .Select(p => new DisplayUsersViewModel
-                             {
+                             {                                
                                  Id = p.Id,
-                                 Users = p.Users.Select(m => m.Email).ToList()
+                                 Users = p.Users.Select(m => m.Email).ToList()                            
                              });
             return Ok(userList);
         }

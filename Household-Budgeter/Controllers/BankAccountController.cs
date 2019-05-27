@@ -10,6 +10,7 @@ using System.Web.Http;
 
 namespace Household_Budgeter.Controllers
 {
+    [Authorize]
     public class BankAccountController : ApiController
     {
         private ApplicationDbContext DbContext;
@@ -96,15 +97,19 @@ namespace Household_Budgeter.Controllers
         {
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
-            var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);           
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
-            if (user != null && account.Households.OwnerId == userId && account != null)
+            if (household == null && account == null)
+            {
+                return BadRequest("Either the Household or Account is not found.");
+            }
+            if (user != null && account != null && account.Households.OwnerId == userId)
             {
                 account.Name = formdata.Name;
                 account.Description = formdata.Description;
                 account.DateUpdated = DateTime.Now;
                 DbContext.SaveChanges();
-                return Ok();
+                return Ok("You edit the Household.");
             }
             else
             {
@@ -112,11 +117,50 @@ namespace Household_Budgeter.Controllers
             }
         }
 
-        public IHttpActionResult Recalculating(int id)
+        public IHttpActionResult Delete(int? id)
+        {
+            var userId = User.Identity.GetUserId();
+            var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
+            var allhousehold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (allhousehold == null)
+            {
+                return BadRequest("There is no household.");
+            }
+            var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
+            var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
+            if (categories == null && account == null)
+            {
+                return BadRequest("Either the Category or Account is not found.");
+            }
+            if (user != null)
+            {
+                if (account != null && account.Households.OwnerId == userId)
+                {
+                    DbContext.BankAccounts.Remove(account);
+                    DbContext.SaveChanges();
+                }
+                else
+                {
+                    return BadRequest("You have not Permission to delete this BankAccount.");
+                }
+            }
+            else
+            {
+                return BadRequest("You have to login to Delete any Account.");
+            }
+            return Ok();
+        }
+
+        [Route("api/BankAccount/ReCalculating/{id}")]
+        public IHttpActionResult ReCalculating(int id)
         {
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (household == null)
+            {
+                return BadRequest("There is no household.");
+            }
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
             if (user != null && account != null && account.Households.OwnerId == userId)
             {
@@ -130,7 +174,8 @@ namespace Household_Budgeter.Controllers
                 }
                 //result = account.Transactions.Sum(t => t.Void ? 0 : t.Amount);
                 account.Balance = result;
-                return Ok("Total Amount");
+                DbContext.SaveChanges();
+                return Ok("ReCheaking all the balance after edit or delete any transaction.");
             }
             else
             {
@@ -152,14 +197,16 @@ namespace Household_Budgeter.Controllers
                 (p.Households.OwnerId == userId
                 || p.Households.Users.Any(t => t.Id == userId)))
                 .Select(m => new BankAccountViewModel
-                {
+                {                   
+                    Id = m.Id,
                     Name = m.Name,
                     Balance = m.Balance,
                     Description = m.Description,
                     DateCreated = m.DateCreated,
-                    DateUpdated = m.DateUpdated
-                })
-                .ToList();
+                    DateUpdated = m.DateUpdated,
+                    Owner = m.Households.Owner.Email,
+                    OwnerId = m.Households.OwnerId
+                }).ToList();
 
             if (account == null)
             {

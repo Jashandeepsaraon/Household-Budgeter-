@@ -19,7 +19,6 @@ namespace Household_Budgeter.Models.Domain
         public virtual List<Categories> Categories { get; set; }
         public virtual List<BankAccount> BankAccounts { get; set; }
 
-
         public Households()
         {
             DateCreated = DateTime.Now;
