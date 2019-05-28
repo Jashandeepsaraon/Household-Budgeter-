@@ -70,6 +70,10 @@ namespace Household_Budgeter.Controllers
             {
                 return BadRequest("Either the Household or Category is not found.");
             }
+            if (account == null)
+            {
+                return BadRequest("There is no BankAccount.");
+            }
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             if (user != null && account != null && houseHold.OwnerId == userId || categories.Households.Users.Contains(user))
