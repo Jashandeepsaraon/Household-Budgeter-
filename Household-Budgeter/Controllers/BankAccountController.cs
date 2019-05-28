@@ -148,7 +148,7 @@ namespace Household_Budgeter.Controllers
             {
                 return BadRequest("You have to login to Delete any Account.");
             }
-            return Ok();
+            return Ok("You delete the BankAccount.");
         }
 
         [Route("api/BankAccount/ReCalculating/{id}")]
@@ -175,7 +175,7 @@ namespace Household_Budgeter.Controllers
                 //result = account.Transactions.Sum(t => t.Void ? 0 : t.Amount);
                 account.Balance = result;
                 DbContext.SaveChanges();
-                return Ok("ReCheaking all the balance after edit or delete any transaction.");
+                return Ok("ReCheaking all the balance after Create, edit or delete any transaction.");
             }
             else
             {

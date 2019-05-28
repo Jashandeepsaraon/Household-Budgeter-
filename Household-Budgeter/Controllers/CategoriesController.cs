@@ -64,7 +64,7 @@ namespace Household_Budgeter.Controllers
             var houseHold = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             if (houseHold == null)
             {
-                return BadRequest("There is no household.");
+                return BadRequest("There is no Household Exist.");
             }
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
@@ -98,7 +98,7 @@ namespace Household_Budgeter.Controllers
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
             if (household == null)
             {
-                return BadRequest("There is no household.");
+                return BadRequest("There is no Household Exist.");
             }
             var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
             if (user != null && categories.Households.OwnerId == userId && categories != null)

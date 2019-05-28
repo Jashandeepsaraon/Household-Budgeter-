@@ -90,12 +90,12 @@ namespace Household_Budgeter.Controllers
             var userId = User.Identity.GetUserId();
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var household = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
-            if (user != null && household.OwnerId == userId)
+            if (household == null)
             {
-                if (household == null)
-                {
-                    return NotFound();
-                }
+                return BadRequest("There is no Household to Editing.");
+            }
+            if (user != null && household.OwnerId == userId)
+            {               
                 household.Name = formdata.Name;
                 household.Description = formdata.Description;
                 household.DateUpdated = DateTime.Now;
@@ -145,6 +145,10 @@ namespace Household_Budgeter.Controllers
             var user = DbContext.Users.FirstOrDefault(p => p.Id == userId);
             var userEmail = DbContext.Users.FirstOrDefault(p => p.Email == email);
             var selectedHouse = DbContext.Allhouseholds.FirstOrDefault(p => p.Id == id);
+            if (selectedHouse == null)
+            {
+                return BadRequest("There is no Household to Invite Members.");
+            }
             if (user != null && selectedHouse.OwnerId == userId)
             {
                 if (!selectedHouse.InviteUsers.Contains(userEmail))
@@ -166,7 +170,7 @@ namespace Household_Budgeter.Controllers
                 }
                 DbContext.SaveChanges();
             }
-            return Ok();
+            return Ok("You are successful to invite the user.");
         }
 
         [Route("api/Households/JoinHousehold/{id}")]
@@ -192,7 +196,7 @@ namespace Household_Budgeter.Controllers
             }
            
             DbContext.SaveChanges();
-            return Ok();
+            return Ok("You are successfully Join the Household.");
         }
 
         [Route("api/Households/DisplayUsers/{id}")]
