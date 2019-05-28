@@ -154,13 +154,13 @@ namespace Household_Budgeter.Controllers
             var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
-            if (allhousehold == null)
+            if (allhousehold == null && categories == null)
             {
-                return BadRequest("There is no Household exist.");
+                return BadRequest("Either the Household or Category is not found.");
             }
-            if (categories == null && account == null)
+            if (account == null && transaction == null)
             {
-                return BadRequest("Either the Category or Account is not found.");
+                return BadRequest("Either the Account or transaction is not found.");
             }
             if (user != null)
             {
