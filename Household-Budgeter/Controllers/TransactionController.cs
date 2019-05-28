@@ -125,6 +125,11 @@ namespace Household_Budgeter.Controllers
                 return BadRequest("Either the Household or Account is not found.");
             }
 
+            if (transaction == null)
+            {
+                return BadRequest("There is no Transaction Found to editing.");
+            }
+
             if (user != null && transaction != null && transaction.Categories.Households.OwnerId == userId  || transaction.CreatedById == userId)
             {
                 transaction.Title = formdata.Title;
@@ -149,9 +154,13 @@ namespace Household_Budgeter.Controllers
             var categories = DbContext.Categories.FirstOrDefault(p => p.Id == id);
             var account = DbContext.BankAccounts.FirstOrDefault(p => p.Id == id);
             var transaction = DbContext.Transactions.FirstOrDefault(p => p.Id == id);
-            if (allhousehold == null && account == null)
+            if (allhousehold == null)
             {
-                return BadRequest("Either the Household or Account is not found.");
+                return BadRequest("There is no Household exist.");
+            }
+            if (categories == null && account == null)
+            {
+                return BadRequest("Either the Category or Account is not found.");
             }
             if (user != null)
             {
