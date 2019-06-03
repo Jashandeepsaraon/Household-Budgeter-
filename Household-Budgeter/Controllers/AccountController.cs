@@ -156,6 +156,7 @@ namespace Household_Budgeter.Controllers
         // POST: /Account/ForgotPassword
         [HttpPost]
         [AllowAnonymous]
+        [Route("forgotpassword")]
         public async Task<IHttpActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)
@@ -185,6 +186,7 @@ namespace Household_Budgeter.Controllers
         // POST: /Account/ResetPassword
         [HttpPost]
         [AllowAnonymous]
+        [Route("resetpassword")]
         public async Task<IHttpActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)

@@ -121,6 +121,7 @@ namespace Household_Budgeter.Controllers
                 }
                 else if (allhousehold != null && allhousehold.OwnerId == userId)
                 {
+                    DbContext.Categories.RemoveRange(allhousehold.Categories);
                     DbContext.Allhouseholds.Remove(allhousehold);
                     DbContext.SaveChanges();
                 }

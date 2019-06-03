@@ -88,8 +88,7 @@ namespace Household_Budgeter.Controllers
                 transaction.BankAccountId = account.Id;
                 transaction.CategoriesId = categories.Id;
                 transaction.CreatedById = userId;
-                DbContext.Transactions.Add(transaction);              
-                //DbContext.Transactions.Add(categories);
+                DbContext.Transactions.Add(transaction);
                 DbContext.SaveChanges();
 
                 var model = new TransactionViewModel
